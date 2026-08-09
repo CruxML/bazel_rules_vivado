@@ -58,7 +58,7 @@ preamble first.
 
 Register multiple `vivado_toolchain` instances side-by-side and let Bazel pick
 one per action via `exec_compatible_with` against the per-version
-`constraint_value`s in `//vivado/constraints/BUILD.bazel`. Each constraint
+`constraint_value`s in `//vivado/constraints/version/BUILD.bazel`. Each constraint
 corresponds to one entry in `//vivado/private:versions.bzl` VIVADO_VERSIONS.
 
 ```starlark

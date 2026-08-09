@@ -9,6 +9,51 @@ through.
 
 Registering a toolchain is **required**.
 
+## Getting Vivado
+
+A toolchain says *how* to run Vivado; it does not put Vivado on the
+machine. There are two ways to close that gap.
+
+**Bring your own install.** Author a `vivado_toolchain` whose `vivado`
+attribute points at a shim that `exec`s an install you provisioned
+yourself — on the host, or baked into a container image referenced from
+an execution platform's `exec_properties`. This is what the rest of this
+page and the [`vivado_toolchain`](./vivado_toolchain.md) docstring
+describe, and it is the right answer when Vivado is already managed by
+something else (a golden image, a config-management system, remote
+execution workers).
+
+**Let Bazel provision it.**
+[`toolchains_vivado`](https://github.com/filmil/bazel_toolchains_vivado)
+is a separate module that takes an AMD/Xilinx unified installer archive,
+installs exactly the device families you ask for, and registers the
+result as a `//vivado:toolchain_type` toolchain. Setup is one tag:
+
+```python
+bazel_dep(name = "rules_vivado", version = "{version}")
+bazel_dep(name = "toolchains_vivado", version = "…")
+
+vivado = use_extension("@toolchains_vivado//vivado:extensions.bzl", "vivado")
+vivado.install(
+    urls = ["file:///opt/archives/FPGAs_AdaptiveSoCs_Unified_SDI_2025.2_1114_2157_1.tar"],
+    sha256 = "…",
+    modules = ["Artix-7"],
+)
+```
+
+No shim script, no `vivado_toolchain` target, no `register_toolchains`
+call — the module registers the toolchain that `vivado_*` rules resolve.
+AMD downloads require a login, so you supply the archive (a local file
+or an internal mirror); the installation is cached outside Bazel's
+output base and survives `bazel clean --expunge`. It is Linux-only and,
+because Vivado is far too large to track as action inputs, the install
+is referenced by absolute path — fine under the local sandbox, not
+suitable for remote execution. See that module's README for the
+component menu, licensing, and multi-version setup.
+
+`rules_vivado` needs no configuration for either path: both produce an
+ordinary `vivado_toolchain`.
+
 ## Implementing a toolchain
 
 See [`vivado_toolchain`](./vivado_toolchain.md) — the rule's docstring
@@ -31,7 +76,7 @@ without the license server, so be deliberate here.
 
 To run multiple Vivado versions side-by-side, gate each
 `vivado_toolchain` with one of the per-version `constraint_value`s in
-[`//vivado/constraints/BUILD.bazel`](https://github.com/hw-bzl/rules_vivado/blob/main/vivado/constraints/BUILD.bazel).
+[`//vivado/constraints/version/BUILD.bazel`](https://github.com/hw-bzl/rules_vivado/blob/main/vivado/constraints/version/BUILD.bazel).
 Each constraint corresponds to one entry in `VIVADO_VERSIONS` (defined
 in
 [`//vivado/private:versions.bzl`](https://github.com/hw-bzl/rules_vivado/blob/main/vivado/private/versions.bzl)).
