@@ -31,6 +31,18 @@ Quick start, toolchain authoring, multi-version constraint gating, and
 the full per-rule reference are hosted at
 **<https://hw-bzl.github.io/rules_vivado/>**.
 
+## Getting Vivado
+
+A toolchain says how to run Vivado; it does not put Vivado on the
+machine. Point one at an install you provisioned yourself, or let Bazel
+provision it:
+[`toolchains_vivado`](https://github.com/filmil/bazel_toolchains_vivado)
+installs Vivado from an AMD/Xilinx unified installer archive and
+registers the toolchain for you, so no shim script or
+`register_toolchains` call is needed. See
+[Toolchains](https://hw-bzl.github.io/rules_vivado/toolchains.html) for
+both paths.
+
 ## License
 
 Apache License 2.0
